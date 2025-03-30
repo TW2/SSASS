@@ -1,6 +1,6 @@
 package org.wingate.ssass.sub.common;
 
-public class Time {
+public class Time implements Cloneable {
     private double micros;
 
     public Time(double micros) {
@@ -35,11 +35,32 @@ public class Time {
         }
     }
 
+    public static boolean isInRange(Time start, Time end, Time ref){
+        return start.micros >= ref.micros && end.micros < ref.micros;
+    }
+
+    public static Time add(Time t, Time ref){
+        return new Time(t.micros + ref.micros);
+    }
+
+    public static Time subtract(Time t, Time ref){
+        return new Time(Math.max(t.micros, ref.micros)-Math.min(t.micros, ref.micros));
+    }
+
     public double getMicros() {
         return micros;
     }
 
     public void setMicros(double micros) {
         this.micros = micros;
+    }
+
+    @Override
+    public Time clone() {
+        try {
+            return (Time) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

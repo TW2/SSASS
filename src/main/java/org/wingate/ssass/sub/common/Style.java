@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Style {
-    private final Map<TextAttribute, Object> attrs = new HashMap<>();
+    protected final Map<TextAttribute, Object> attrs = new HashMap<>();
     private String fontName;
     private float fontSize;
     private boolean bold;
@@ -109,5 +109,9 @@ public class Style {
 
     public Color getForegroundColor() {
         return foregroundColor;
+    }
+
+    public Map<TextAttribute, Object> getAttrs() {
+        return attrs;
     }
 }
