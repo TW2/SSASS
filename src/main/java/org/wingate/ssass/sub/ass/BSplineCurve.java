@@ -28,7 +28,7 @@ public class BSplineCurve extends Curve {
         degree = bezierCurve.getControlPoints().size() - 1;
         updateKnots();
         for (int i = 0; i < knots.size(); i++) {
-            knots.set(i, new Double(i / (degree + 1)));
+            knots.set(i, (double) i / (degree + 1));
         }
     }
 
@@ -210,7 +210,7 @@ public class BSplineCurve extends Curve {
     private void updateKnots() {
         knots = new ArrayList<Double>(getControlPoints().size() + degree + 1);
         for (int i = 0; i < getControlPoints().size() + degree + 1; i++) {
-            knots.add(new Double(i));
+            knots.add((double) i);
         }
     }
 
