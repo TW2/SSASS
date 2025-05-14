@@ -1,8 +1,8 @@
 package org.wingate.ssass.ass.render;
 
-import org.wingate.lolisub.ass.ASS;
-import org.wingate.lolisub.ass.AssEvent;
-import org.wingate.lolisub.ass.AssStyle;
+import org.wingate.ssass.ass.ASS;
+import org.wingate.ssass.ass.AssEvent;
+import org.wingate.ssass.ass.AssStyle;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;

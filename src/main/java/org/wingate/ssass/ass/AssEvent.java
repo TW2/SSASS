@@ -16,23 +16,9 @@
  */
 package org.wingate.ssass.ass;
 
-import java.awt.AlphaComposite;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.UIManager;
-import javax.swing.table.TableCellRenderer;
-
-import org.wingate.lolisub.helper.DrawColor;
-import org.wingate.lolisub.helper.ISO_3166;
-import org.wingate.lolisub.ui.table.Bookmark;
-import org.wingate.lolisub.ui.table.CollapseGroup;
 
 /**
  *
@@ -69,20 +55,6 @@ public class AssEvent implements Cloneable {
     private AssEffect effect;
     private String text;
 
-    // This value is marking a following group
-    private boolean collapseElementFollow;
-    // This value is marking a previous group
-    private boolean collapseElementPrevious;
-    // This value is a previous group
-    // Collapsed group is a group of AssEvent which are hidden in the table
-    // At rendering of the table this value is supposed to be read
-    // for indices ordering in the extreme left of the LeftComponent which
-    // will supply line numbers, bookmarks and collapsed groups
-    // When the group is null, it doesn't have any event
-    private CollapseGroup group;
-    // This value keeps bookmarks
-    private List<Bookmark> bookmarks;
-
     // TODO: Group of ISO-3166 (do a XML-based file to save all data [*.asx for ass xml])
 
     public AssEvent(){
@@ -97,11 +69,6 @@ public class AssEvent implements Cloneable {
         marginV = 0;
         effect = new AssEffect();
         text = "";
-
-        collapseElementFollow = false;
-        collapseElementPrevious = false;
-        group = null;
-        bookmarks = new ArrayList<>();
     }
 
     public static AssEvent createFromRawLine(String rawline, List<AssStyle> ls, List<AssActor> la, List<AssEffect> lf) {
@@ -271,38 +238,6 @@ public class AssEvent implements Cloneable {
         this.text = text;
     }
 
-    public boolean isCollapseElementFollow() {
-        return collapseElementFollow;
-    }
-
-    public void setCollapseElementFollow(boolean collapseElementFollow) {
-        this.collapseElementFollow = collapseElementFollow;
-    }
-
-    public boolean isCollapseElementPrevious() {
-        return collapseElementPrevious;
-    }
-
-    public void setCollapseElementPrevious(boolean collapseElementPrevious) {
-        this.collapseElementPrevious = collapseElementPrevious;
-    }
-
-    public CollapseGroup getGroup() {
-        return group;
-    }
-
-    public void setGroup(CollapseGroup group) {
-        this.group = group;
-    }
-
-    public List<Bookmark> getBookmarks() {
-        return bookmarks;
-    }
-
-    public void setBookmarks(List<Bookmark> bookmarks) {
-        this.bookmarks = bookmarks;
-    }
-
     public float getCPS(){
         // Character per second
         String s = getText();
@@ -371,139 +306,5 @@ public class AssEvent implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }
-    }
-
-    public static class Renderer extends JPanel implements TableCellRenderer {
-        
-        public enum Stripped {
-            Off, Partially, On; 
-        }
-        
-        private Stripped strippedOrigin = Stripped.Partially;
-        private Stripped strippedTranslation = Stripped.Partially;
-        private String partiallyStrippedSymbol = "◆";
-
-        private final JLabel flagTranslation;
-        private final JLabel textTranslation;
-
-        public Renderer() {
-            JPanel withFlagTranslation = new JPanel();
-            flagTranslation = new JLabel("");
-            flagTranslation.setSize(20*4/3, 20);
-            textTranslation = new JLabel("");
-            textTranslation.setOpaque(true);
-            
-            withFlagTranslation.setLayout(new BorderLayout());
-            withFlagTranslation.add(flagTranslation, BorderLayout.WEST);
-            withFlagTranslation.add(textTranslation, BorderLayout.CENTER);
-            
-            setLayout(new BorderLayout());
-            add(withFlagTranslation, BorderLayout.CENTER);
-        }
-        
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            
-            Color bg;
-            
-            if(value instanceof AssEvent event){
-                AlphaComposite alpha = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
-                
-                textTranslation.setText(applyStrip(event.getText(), strippedTranslation));
-                
-                if(event.getType() == Type.Comment){
-                    bg = DrawColor.violet.getColor();
-                }else{
-                    // Get table background (avoid searching from any other way)
-                    // FlatLaf properties >> Table.background
-                    bg = UIManager.getColor("Table.background");
-                }
-
-                // Get table foreground (avoid searching from any other way)
-                // FlatLaf properties >> Table.foreground
-                Color fg = UIManager.getColor("Table.foreground");
-                
-                if(isSelected){
-                    bg = UIManager.getColor("Table.selectionBackground");
-                    fg = UIManager.getColor("Table.selectionForeground");
-                }
-
-                // Set color to label
-                setBackground(bg);
-                setForeground(fg);
-                
-                textTranslation.setBackground(bg);
-                textTranslation.setForeground(fg);
-                
-//                ImageIcon iTranslation = Load.fromResource("/org/wingate/feuille/" + event.getLanguage().getAlpha2().toLowerCase() + ".gif");
-//                BufferedImage imgTranslation = new BufferedImage(20*4/3, 20, BufferedImage.TYPE_INT_RGB);
-//                Graphics2D gTranslation = imgTranslation.createGraphics();
-//                gTranslation.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-//                gTranslation.setColor(bg);
-//                gTranslation.fillRect(0, 0, 20*4/3, 20);
-//                gTranslation.setComposite(alpha);
-//                gTranslation.drawImage(iTranslation.getImage(), 0, 0, 20*4/3, 20, null);
-//                gTranslation.dispose();
-//                flagTranslation.setIcon(new ImageIcon(imgTranslation));
-            }
-            
-            return this;
-        }
-        
-        private String applyStrip(String s, Stripped stripped){
-            try{
-                String str = "";
-                switch(stripped){
-                    case On -> {
-                        if(s.contains("{\\")){
-                            try {
-                                str = s.replaceAll("\\{[^\\}]+\\}", "");
-                            } catch (Exception e) {
-                                str = s;
-                            }
-                        }else{
-                            str = s;
-                        }
-                    }
-                    case Partially -> {
-                        if(s.contains("{\\")){
-                            try {
-                                str = s.replaceAll("\\{[^\\}]+\\}", partiallyStrippedSymbol);
-                            } catch (Exception e) {
-                                str = s;
-                            }
-                        }else{
-                            str = s;
-                        }
-                    }
-                    case Off -> {
-                        str = s;
-                    }
-                }
-                return str;
-            }catch(Exception _){
-            }
-            return s;
-        }
-
-        public void setStrippedAll(Stripped stripped) {
-            strippedOrigin = stripped;
-            strippedTranslation = stripped;
-        }
-
-        public void setStrippedOrigin(Stripped stripped) {
-            strippedOrigin = stripped;
-        }
-
-        public void setStrippedTranslation(Stripped stripped) {
-            strippedTranslation = stripped;
-        }
-
-        public void setPartiallyStrippedSymbol(String partiallyStrippedSymbol) {
-            this.partiallyStrippedSymbol = partiallyStrippedSymbol;
-        }
-        
     }
 }
