@@ -38,7 +38,7 @@ public class OutputImage {
         return images;
     }
 
-    public static BufferedImage getImages(
+    public static BufferedImage getImage(
             ASS ass, AssEvent event, int width, int height) {
         return doImage(ass, event, width, height);
     }

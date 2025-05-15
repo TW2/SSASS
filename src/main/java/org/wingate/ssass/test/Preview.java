@@ -70,7 +70,7 @@ public class Preview {
 
                 try{
                     ImageIO.write(
-                            OutputImage.getImages(ass, event, 1280, 720),
+                            OutputImage.getImage(ass, event, 1280, 720),
                             "png",
                             new File(completePath)
                     );
@@ -79,6 +79,7 @@ public class Preview {
                 }
 
                 System.out.println("Written!");
+                scanner.close();
             } catch (AssColorException e) {
                 throw new RuntimeException(e);
             }
