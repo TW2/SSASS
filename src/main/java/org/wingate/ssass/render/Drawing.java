@@ -1,4 +1,4 @@
-package org.wingate.ssass.ass.render;
+package org.wingate.ssass.render;
 
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;

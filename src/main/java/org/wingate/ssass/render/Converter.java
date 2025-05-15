@@ -1,4 +1,4 @@
-package org.wingate.ssass.ass.render;
+package org.wingate.ssass.render;
 
 import org.wingate.ssass.ass.ASS;
 import org.wingate.ssass.ass.AssEvent;
