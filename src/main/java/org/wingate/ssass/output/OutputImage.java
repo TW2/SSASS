@@ -74,7 +74,7 @@ public class OutputImage {
         }
 
         // Apply position (take into account movement)
-        AffineTransform tr = doPosition(g, event, micros, width, height,
+        AffineTransform tr = doPosition(event, micros, width, height,
                 sentenceWidth, sentenceHeight, converter);
         g.setTransform(tr);
 
@@ -98,7 +98,7 @@ public class OutputImage {
         return image;
     }
 
-    private static AffineTransform doPosition(Graphics2D g, AssEvent event, long micros,
+    private static AffineTransform doPosition(AssEvent event, long micros,
                int width, int height, double sentenceWidth, double sentenceHeight,
                Converter converter){
 
