@@ -139,7 +139,7 @@ public enum Tag {
                 if(!s.isEmpty()) return s.equals("1");
             }
             // Color case
-            case TextColor, KaraokeColor, OutlineColor, ShadowColor -> {
+            case TextColor, KaraokeColor, OutlineColor, ShadowColor, PrimaryColor -> {
                 value = value.replace("&", "");
                 value = value.replace("H", "");
                 value = value.replace(tag.getTag(), "");

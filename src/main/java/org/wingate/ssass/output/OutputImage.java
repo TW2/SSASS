@@ -10,10 +10,8 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class OutputImage {
 
@@ -82,15 +80,17 @@ public class OutputImage {
         for(AGraphicElement element : converter.getElements()){
             if(element instanceof Char c){
                 // TODO Shadow
+                g.setColor(doShadowColor(event, micros, converter)); // 4c 4a alpha fad fade
                 // Outline
-                g.setColor(event.getStyle().getOutlineColor().getColor());
+                g.setColor(doOutlineColor(event, micros, converter)); // 3c 3a alpha fad fade
                 c.draw(g);
                 // Text
-                g.setColor(event.getStyle().getTextColor().getColor());
+                g.setColor(doTextColor(event, micros, converter)); // c 1c 1a alpha fad fade
                 c.fill(g);
                 tr.translate(c.getAdvance() + c.getExtraSpacing(), 0d);
                 g.setTransform(tr);
                 // TODO Karaoke
+                g.setColor(doKaraokeColor(event, micros, converter)); // 2c 2a alpha fad fade
             }
         }
 
@@ -240,7 +240,6 @@ public class OutputImage {
                                     if(value.length == entry.getKey().getMaxParameters()){
                                         xp = Double.parseDouble(value[0]);
                                         yp = Double.parseDouble(value[1]);
-
                                     }
                                 }
                             }
@@ -293,5 +292,379 @@ public class OutputImage {
         tr.translate(x + xp, y + yp);
 
         return tr;
+    }
+
+    private static Color doTextColor(AssEvent event, long micros, Converter converter){
+        Color c = event.getStyle().getTextColor().getColor();
+
+        int trans = event.getStyle().getTextColor().getColor().getTransparency();
+
+        switch(converter.getElements().getFirst()){
+            case Char v -> {
+                // Alpha
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.TextAlpha, Tag.Alpha -> {
+                                if(Tag.valuesOf(entry) instanceof Integer value){
+                                    trans = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.FadeSimple -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    // Fade in
+                                    long s1 = (long) (event.getStart().getMsTime() * 1000);
+                                    long t1 = Long.parseLong(value[0]) * 1000;
+                                    long s2 = t1 + s1;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(s1 <= micros && micros <= s2 && t1 > 0){
+                                        trans = Math.toIntExact(255 * micros / t1);
+                                    }
+
+                                    // Fade out
+                                    long e4 = (long) (event.getEnd().getMsTime() * 1000);
+                                    long t2 = Long.parseLong(value[1]) * 1000;
+                                    long e3 = e4 - t2;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(e3 <= micros && micros <= e4 && t2 > 0){
+                                        trans = Math.toIntExact(255 * micros / t2);
+                                    }
+                                }
+                            }
+                            case Tag.FadeComplex -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    int a1 = Integer.parseInt(value[0]);
+                                    int a2 = Integer.parseInt(value[1]);
+                                    int a3 = Integer.parseInt(value[2]);
+                                    long t1 = Long.parseLong(value[3]);
+                                    long t2 = Long.parseLong(value[4]);
+                                    long t3 = Long.parseLong(value[5]);
+                                    long t4 = Long.parseLong(value[6]);
+                                    long p1 = t2 - t1;
+                                    long p2 = t4 - t3;
+                                    // Fade in (t <> 255 ; micros <> x)
+                                    if(t1 <= micros && micros <= t2 && p1 > 0){
+                                        int p = a2 - a1;
+                                        trans = Math.toIntExact((p * micros / p1) + a1);
+                                    }
+                                    // Fade out (t <> 255 ; micros <> x)
+                                    if(t3 <= micros && micros <= t4 && p2 > 0){
+                                        int p = a3 - a2;
+                                        trans = Math.toIntExact((p * micros / p2) + a2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Color
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.TextColor, Tag.PrimaryColor -> {
+                                if(Tag.valuesOf(entry) instanceof Color value){
+                                    c = value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            case Drawing v -> {
+
+            }
+            default -> {}
+        }
+
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), trans);
+    }
+
+    private static Color doKaraokeColor(AssEvent event, long micros, Converter converter){
+        Color c = event.getStyle().getTextColor().getColor();
+
+        int trans = event.getStyle().getTextColor().getColor().getTransparency();
+
+        switch(converter.getElements().getFirst()){
+            case Char v -> {
+                // Alpha
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.KaraokeAlpha, Tag.Alpha -> {
+                                if(Tag.valuesOf(entry) instanceof Integer value){
+                                    trans = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.FadeSimple -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    // Fade in
+                                    long s1 = (long) (event.getStart().getMsTime() * 1000);
+                                    long t1 = Long.parseLong(value[0]) * 1000;
+                                    long s2 = t1 + s1;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(s1 <= micros && micros <= s2 && t1 > 0){
+                                        trans = Math.toIntExact(255 * micros / t1);
+                                    }
+
+                                    // Fade out
+                                    long e4 = (long) (event.getEnd().getMsTime() * 1000);
+                                    long t2 = Long.parseLong(value[1]) * 1000;
+                                    long e3 = e4 - t2;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(e3 <= micros && micros <= e4 && t2 > 0){
+                                        trans = Math.toIntExact(255 * micros / t2);
+                                    }
+                                }
+                            }
+                            case Tag.FadeComplex -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    int a1 = Integer.parseInt(value[0]);
+                                    int a2 = Integer.parseInt(value[1]);
+                                    int a3 = Integer.parseInt(value[2]);
+                                    long t1 = Long.parseLong(value[3]);
+                                    long t2 = Long.parseLong(value[4]);
+                                    long t3 = Long.parseLong(value[5]);
+                                    long t4 = Long.parseLong(value[6]);
+                                    long p1 = t2 - t1;
+                                    long p2 = t4 - t3;
+                                    // Fade in (t <> 255 ; micros <> x)
+                                    if(t1 <= micros && micros <= t2 && p1 > 0){
+                                        int p = a2 - a1;
+                                        trans = Math.toIntExact((p * micros / p1) + a1);
+                                    }
+                                    // Fade out (t <> 255 ; micros <> x)
+                                    if(t3 <= micros && micros <= t4 && p2 > 0){
+                                        int p = a3 - a2;
+                                        trans = Math.toIntExact((p * micros / p2) + a2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Color
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        if (Objects.requireNonNull(entry.getKey()) == Tag.KaraokeColor) {
+                            if (Tag.valuesOf(entry) instanceof Color value) {
+                                c = value;
+                            }
+                        }
+                    }
+                }
+            }
+            case Drawing v -> {
+
+            }
+            default -> {}
+        }
+
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), trans);
+    }
+
+    private static Color doOutlineColor(AssEvent event, long micros, Converter converter){
+        Color c = event.getStyle().getTextColor().getColor();
+
+        int trans = event.getStyle().getTextColor().getColor().getTransparency();
+
+        switch(converter.getElements().getFirst()){
+            case Char v -> {
+                // Alpha
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.OutlineAlpha, Tag.Alpha -> {
+                                if(Tag.valuesOf(entry) instanceof Integer value){
+                                    trans = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.FadeSimple -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    // Fade in
+                                    long s1 = (long) (event.getStart().getMsTime() * 1000);
+                                    long t1 = Long.parseLong(value[0]) * 1000;
+                                    long s2 = t1 + s1;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(s1 <= micros && micros <= s2 && t1 > 0){
+                                        trans = Math.toIntExact(255 * micros / t1);
+                                    }
+
+                                    // Fade out
+                                    long e4 = (long) (event.getEnd().getMsTime() * 1000);
+                                    long t2 = Long.parseLong(value[1]) * 1000;
+                                    long e3 = e4 - t2;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(e3 <= micros && micros <= e4 && t2 > 0){
+                                        trans = Math.toIntExact(255 * micros / t2);
+                                    }
+                                }
+                            }
+                            case Tag.FadeComplex -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    int a1 = Integer.parseInt(value[0]);
+                                    int a2 = Integer.parseInt(value[1]);
+                                    int a3 = Integer.parseInt(value[2]);
+                                    long t1 = Long.parseLong(value[3]);
+                                    long t2 = Long.parseLong(value[4]);
+                                    long t3 = Long.parseLong(value[5]);
+                                    long t4 = Long.parseLong(value[6]);
+                                    long p1 = t2 - t1;
+                                    long p2 = t4 - t3;
+                                    // Fade in (t <> 255 ; micros <> x)
+                                    if(t1 <= micros && micros <= t2 && p1 > 0){
+                                        int p = a2 - a1;
+                                        trans = Math.toIntExact((p * micros / p1) + a1);
+                                    }
+                                    // Fade out (t <> 255 ; micros <> x)
+                                    if(t3 <= micros && micros <= t4 && p2 > 0){
+                                        int p = a3 - a2;
+                                        trans = Math.toIntExact((p * micros / p2) + a2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Color
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        if (Objects.requireNonNull(entry.getKey()) == Tag.OutlineColor) {
+                            if (Tag.valuesOf(entry) instanceof Color value) {
+                                c = value;
+                            }
+                        }
+                    }
+                }
+            }
+            case Drawing v -> {
+
+            }
+            default -> {}
+        }
+
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), trans);
+    }
+
+    private static Color doShadowColor(AssEvent event, long micros, Converter converter){
+        Color c = event.getStyle().getTextColor().getColor();
+
+        int trans = event.getStyle().getTextColor().getColor().getTransparency();
+
+        switch(converter.getElements().getFirst()){
+            case Char v -> {
+                // Alpha
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.ShadowAlpha, Tag.Alpha -> {
+                                if(Tag.valuesOf(entry) instanceof Integer value){
+                                    trans = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        switch(entry.getKey()){
+                            case Tag.FadeSimple -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    // Fade in
+                                    long s1 = (long) (event.getStart().getMsTime() * 1000);
+                                    long t1 = Long.parseLong(value[0]) * 1000;
+                                    long s2 = t1 + s1;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(s1 <= micros && micros <= s2 && t1 > 0){
+                                        trans = Math.toIntExact(255 * micros / t1);
+                                    }
+
+                                    // Fade out
+                                    long e4 = (long) (event.getEnd().getMsTime() * 1000);
+                                    long t2 = Long.parseLong(value[1]) * 1000;
+                                    long e3 = e4 - t2;
+                                    // t <> 255
+                                    // micros <> x
+                                    if(e3 <= micros && micros <= e4 && t2 > 0){
+                                        trans = Math.toIntExact(255 * micros / t2);
+                                    }
+                                }
+                            }
+                            case Tag.FadeComplex -> {
+                                if(Tag.valuesOf(entry) instanceof String[] value){
+                                    int a1 = Integer.parseInt(value[0]);
+                                    int a2 = Integer.parseInt(value[1]);
+                                    int a3 = Integer.parseInt(value[2]);
+                                    long t1 = Long.parseLong(value[3]);
+                                    long t2 = Long.parseLong(value[4]);
+                                    long t3 = Long.parseLong(value[5]);
+                                    long t4 = Long.parseLong(value[6]);
+                                    long p1 = t2 - t1;
+                                    long p2 = t4 - t3;
+                                    // Fade in (t <> 255 ; micros <> x)
+                                    if(t1 <= micros && micros <= t2 && p1 > 0){
+                                        int p = a2 - a1;
+                                        trans = Math.toIntExact((p * micros / p1) + a1);
+                                    }
+                                    // Fade out (t <> 255 ; micros <> x)
+                                    if(t3 <= micros && micros <= t4 && p2 > 0){
+                                        int p = a3 - a2;
+                                        trans = Math.toIntExact((p * micros / p2) + a2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Color
+                for(Map<Tag, String> map : v.getTags()){
+                    for(Map.Entry<Tag, String> entry : map.entrySet()){
+                        if (Objects.requireNonNull(entry.getKey()) == Tag.ShadowColor) {
+                            if (Tag.valuesOf(entry) instanceof Color value) {
+                                c = value;
+                            }
+                        }
+                    }
+                }
+            }
+            case Drawing v -> {
+
+            }
+            default -> {}
+        }
+
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), trans);
     }
 }
