@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Parse ASS tags inline and store per-character data
+ */
 public class Converter {
 
     private final List<AGraphicElement> elements;
@@ -29,7 +32,7 @@ public class Converter {
         return elements;
     }
 
-    public static Converter creteShapes(AssEvent event, ASS ass){
+    public static Converter createShapes(AssEvent event, ASS ass){
         Converter converter = new Converter(event);
         GraphicType type = converter.strContains("\\{\\\\p\\d+\\}", event.getText()) ?
                 GraphicType.Drawing : GraphicType.Letter;

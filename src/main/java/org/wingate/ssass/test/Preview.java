@@ -70,7 +70,7 @@ public class Preview {
 
                 try{
                     ImageIO.write(
-                            OutputImage.getImage(ass, event, 1280, 720),
+                            OutputImage.getImage(ass, event, new AssTime(0d), 1280, 720),
                             "png",
                             new File(completePath)
                     );

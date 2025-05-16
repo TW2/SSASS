@@ -157,10 +157,15 @@ public enum Tag {
                 if(value.isEmpty()) return null;
                 return 255 - Integer.parseInt(value, 16);
             }
-            // 2 parameters case
-            case FadeSimple, Position, Origin -> {
+            // 2 parameters case or more
+            case FadeSimple, FadeComplex, Position, Movement,
+                 Origin, ClipDrawing, ClipRectangle,
+                 InvisibleClipDrawing, InvisibleClipRectangle -> {
                 value = value.replace(tag.getTag(), "");
-
+                value = value.replace("(", "");
+                value = value.replace(")", "");
+                if(value.isEmpty()) return null;
+                return value.split(",");
             }
         }
         return null;
