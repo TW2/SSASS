@@ -21,11 +21,54 @@ The main class just show "Hello" in the terminal. It can be a good test. But it'
 
 ### Tags taken into account :
 
-- [x] Drawing commands p and subcommands m l b s p c and the n which is in the meantime equals to m
-- [ ] Drawing baseline pbo
-- [x] Font specific : b i u s fn fs r
-- [x] Rescale/alter : fsc fscx fscy fsp
-- [ ] Others
+| Parameter | Works |
+|:---------:|:-----:|
+| fn | ok |
+| fs | ok |
+| b | ok |
+| i | ok |
+| u | ok |
+| s | ok |
+| fsp | ok |
+| bord |  |
+| xbord |  |
+| ybord |  |
+| shad |  |
+| xshad |  |
+| yshad |  |
+| be |  |
+| blur |  |
+| fsc |  |
+| fscx | ok |
+| fscy | ok |
+| fr |  |
+| frx |  |
+| fry |  |
+| frz |  |
+| fax |  |
+| fay |  |
+| fe |  |
+| colors | ok |
+| alpha |  |
+| an | ok |
+| a | ok |
+| k |  |
+| K |  |
+| kf |  |
+| ko |  |
+| kt |  |
+| q |  |
+| r | partially ok |
+| pos | ok |
+| move |  |
+| org |  |
+| fad |  |
+| fade |  |
+| t |  |
+| clip |  |
+| iclip |  |
+| pbo |  |
+| p |  |
 
 You can join me on Discord to speak or idle, in English or French (cause I'm a half white black Frenchy).
 
