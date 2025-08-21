@@ -5,10 +5,7 @@ import org.wingate.ssass.assa.*;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -239,7 +236,8 @@ public class Hitman {
 
         // TODO remove this control code:
         for(Map.Entry<Integer, String> entry : tags.entrySet()){
-            System.out.printf("%d: %s\n", entry.getKey(), entry.getValue());
+            System.out.printf("%d: %s, %s\n",
+                    entry.getKey(), entry.getValue(), letters.get(entry.getKey()));
         }
     }
 
@@ -323,6 +321,12 @@ public class Hitman {
 
     private void parseTransform(){
         // fr( |x|y|z), scale (already done), shear
+        for(int i=0; i<letters.size(); i++){
+            letterIndex = i;
+            try{
+                bord();
+            }catch(Exception _){ }
+        }
 
     }
 
@@ -368,7 +372,7 @@ public class Hitman {
 
     private Font parseFont() throws AssColorException {
         // r fn fs
-        Font notEval = fontFormStyle();
+        Font notEval = fontFromStyle();
         // Real size in points
         float sizePoints = fontSizePoints(notEval);
         // b i u s
@@ -376,7 +380,7 @@ public class Hitman {
     }
 
     // For r fn fs
-    private Font fontFormStyle() throws AssColorException {
+    private Font fontFromStyle() throws AssColorException {
         // Default line font defined by event style
         Font notEval = event.getStyle().getAssFont().getFont();
 
@@ -700,7 +704,7 @@ public class Hitman {
     }
 
     private Color outlineColor() throws AssColorException {
-        AssColor value = new AssColor(Color.yellow);
+        AssColor value = new AssColor(Color.black);
         // Search for the last bold in tags (\b1 or \b0)
         if(tags.containsKey(letterIndex)){
             String[] inner = tags.get(letterIndex).split("\\\\");
@@ -723,7 +727,7 @@ public class Hitman {
     }
 
     private Color shadowColor() throws AssColorException {
-        AssColor value = new AssColor(Color.yellow);
+        AssColor value = new AssColor(Color.black);
         // Search for the last bold in tags (\b1 or \b0)
         if(tags.containsKey(letterIndex)){
             String[] inner = tags.get(letterIndex).split("\\\\");
@@ -863,6 +867,286 @@ public class Hitman {
         }
 
         return new Point2D.Double(x, y);
+    }
+
+    private void bord(){
+        double value = event.getStyle().getOutline();
+        String type = "xy";
+        if(tags.containsKey(letterIndex)){
+            String[] inner = tags.get(letterIndex).split("\\\\");
+            Pattern p = Pattern.compile("(?<type>[xy]*)bord(?<value>\\d+)");
+            Matcher m;
+            for(String tag : inner){
+                m = p.matcher(tag);
+                while(m.find()){
+                    if(m.groupCount() == 2){
+                        type = m.group("type");
+                    }
+                    value = Double.parseDouble(m.group("value"));
+                }
+            }
+        }
+
+        // Transform
+        List<GeneralPath> paths = getPaths(textShapes.get(letterIndex));
+        PathType mainPathType = null;
+        if(!paths.isEmpty()){
+            mainPathType = new PathType(paths.getFirst());
+            for(GeneralPath path : paths){
+                PathType pt = new PathType(path);
+                pathTyper(mainPathType, pt);
+            }
+        }
+
+        if(mainPathType != null){
+            Area area = reshape(mainPathType, null);
+
+            Area result = new Area();
+            switch(type){
+                case "x" -> result = xBorder(mainPathType, value);
+                case "y" -> result = yBorder(mainPathType, value);
+                case "xy" -> result = xyBorder(mainPathType, value);
+            }
+
+            outlineShapes.set(letterIndex, result);
+        }
+    }
+
+    private List<GeneralPath> getPaths(Shape shape){
+        GeneralPath gp = new GeneralPath(shape);
+        double[] coordinates = new double[6];
+        PathIterator pi = gp.getPathIterator(null);
+        List<GeneralPath> shapes = new ArrayList<>();
+        GeneralPath sh = null;
+        while(!pi.isDone()){
+            int segment = pi.currentSegment(coordinates);
+            switch(segment){
+                case PathIterator.SEG_MOVETO -> {
+                    if(sh != null) {
+                        sh.closePath();
+                        shapes.add(sh);
+                    }
+                    sh = new GeneralPath();
+                    sh.moveTo(coordinates[0], coordinates[1]);
+                }
+                case PathIterator.SEG_LINETO -> {
+                    if(sh == null){
+                        sh = new GeneralPath();
+                        sh.moveTo(coordinates[0], coordinates[1]);
+                    }
+                    sh.lineTo(coordinates[0], coordinates[1]);
+                }
+                case PathIterator.SEG_QUADTO -> {
+                    if(sh == null){
+                        sh = new GeneralPath();
+                        sh.moveTo(coordinates[0], coordinates[1]);
+                    }
+                    sh.quadTo(
+                            coordinates[0], coordinates[1],
+                            coordinates[2], coordinates[3]
+                    );
+                }
+                case PathIterator.SEG_CUBICTO -> {
+                    if(sh == null){
+                        sh = new GeneralPath();
+                        sh.moveTo(coordinates[0], coordinates[1]);
+                    }
+                    sh.curveTo(
+                            coordinates[0], coordinates[1],
+                            coordinates[2], coordinates[3],
+                            coordinates[4], coordinates[5]
+                    );
+                }
+                case PathIterator.SEG_CLOSE -> {
+                    if(sh != null){
+                        sh.closePath();
+                        shapes.add(sh);
+                        sh = null;
+                    }
+                }
+            }
+            pi.next();
+        }
+        return shapes;
+    }
+
+    static class PathType {
+        public enum Type { Outer, Inner }
+        private Type type;
+        private final GeneralPath shape;
+        private final List<PathType> children;
+
+        public PathType(GeneralPath shape) {
+            this.shape = shape;
+            children = new ArrayList<>();
+            type = Type.Outer;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public void setType(Type type) {
+            this.type = type;
+        }
+
+        public GeneralPath getShape() {
+            return shape;
+        }
+
+        public List<PathType> getChildren() {
+            return children;
+        }
+    }
+
+    private void pathTyper(PathType parent, PathType test){
+        Rectangle2D rParent = parent.getShape().getBounds2D();
+        Rectangle2D rTest = test.getShape().getBounds2D();
+        if(rParent.equals(rTest)) return;
+        if(rParent.contains(rTest)){
+            test.setType(parent.getType() == PathType.Type.Outer ?
+                    PathType.Type.Inner : PathType.Type.Outer);
+            parent.getChildren().add(test);
+        }else{
+            for(PathType path : parent.getChildren()){
+                // Recursive here
+                pathTyper(path, test);
+            }
+        }
+    }
+
+    private Area reshape(PathType parent, Area main){
+        if(main == null){
+            main = new Area(parent.getShape());
+        }
+        System.out.printf("Type[%s]: %s \n",letters.get(letterIndex), parent.getType());
+        for(PathType child : parent.getChildren()){
+            System.out.printf("Sub[%s]: %s \n",letters.get(letterIndex), child.getType());
+            Area c = new Area(child.getShape());
+            switch(child.getType()){
+                case Outer -> main.add(c);
+                case Inner -> main.subtract(c);
+            }
+            // Recursive here
+            main = reshape(child, main);
+        }
+        return main;
+    }
+
+    private Area xBorder(PathType p, double unit){
+        Area main = new Area(p.getShape());
+        Area a1L = new Area(p.getShape());
+        Area a1R = new Area(p.getShape());
+        Area a2L = new Area(p.getShape());
+        Area a2R = new Area(p.getShape());
+        switch(p.getType()){
+            case Outer -> {
+                System.out.println("Outer");
+                // To the left
+                // On décale tous les points vers la gauche
+                // On supprime tous les points à l'intérieur du parent
+                // TODO more precision
+                AffineTransform left;
+                for(int i=0; i<unit; i++){
+                    left = new AffineTransform();
+                    left.translate(-1d, 0d);
+                    a1L = a1L.createTransformedArea(left);
+                    main.add(a1L);
+                }
+
+                // To the right
+                // On décale tous les points vers la droite
+                // On supprime tous les points à l'intérieur du parent
+                // TODO more precision
+                AffineTransform right;
+                for(int i=0; i<unit; i++){
+                    right = new AffineTransform();
+                    right.translate(1d, 0d);
+                    a1R = a1R.createTransformedArea(right);
+                    main.add(a1R);
+                }
+            }
+            case Inner -> {
+                System.out.println("Inner");
+                // Inverse the left
+                // On décale tous les points vers la gauche
+                // On supprime tous les points à l'extérieur du parent
+                // TODO more precision
+                AffineTransform left;
+                for(int i=0; i<unit; i++){
+                    left = new AffineTransform();
+                    left.translate(1d, 0d);
+                    a2L = a2L.createTransformedArea(left);
+                    main.subtract(a2L);
+                }
+
+                // Inverse the right
+                // On décale tous les points vers la droite
+                // On supprime tous les points à l'extérieur du parent
+                // TODO more precision
+                AffineTransform right;
+                for(int i=0; i<unit; i++){
+                    right = new AffineTransform();
+                    right.translate(-1d, 0d);
+                    a2R = a2R.createTransformedArea(right);
+                    main.subtract(a2R);
+                }
+            }
+        }
+        for(PathType child : p.getChildren()){
+            // Recursive here
+            xBorder(child, unit);
+        }
+
+        return main;
+    }
+
+    private Area yBorder(PathType p, double unit){
+        switch(p.getType()){
+            case Outer -> {
+                // To the top
+                // On décale tous les points vers le haut
+                // On supprime tous les points à l'intérieur du parent
+
+                // To the bottom
+                // On décale tous les points vers le bas
+                // On supprime tous les points à l'intérieur du parent
+
+            }
+            case Inner -> {
+                // Inverse the top
+                // On décale tous les points vers le haut
+                // On supprime tous les points à l'extérieur du parent
+
+                // Inverse the bottom
+                // On décale tous les points vers le bas
+                // On supprime tous les points à l'extérieur du parent
+
+            }
+        }
+
+        for(PathType child : p.getChildren()){
+            // Recursive here
+            yBorder(child, unit);
+        }
+        return new Area();
+    }
+
+    private Area xyBorder(PathType p, double unit){
+        switch(p.getType()){
+            case Outer -> {
+
+            }
+            case Inner -> {
+//
+            }
+        }
+
+        for(PathType child : p.getChildren()){
+            // Recursive here
+            xyBorder(child, unit);
+        }
+        return new Area();
     }
 
     public List<String> getLetters() {

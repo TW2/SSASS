@@ -55,16 +55,16 @@ public class Yakuza {
         }
 
         // Draw shadow
-        for(Hitman hitman : hitmen){
-            for(int i=0; i<hitman.getLetters().size(); i++){
-                // Apply paint
-                g.setPaint(hitman.getShadowPaints().get(i));
-                // Set clip
-                g.setClip(hitman.getClip());
-                // Fill in visible area
-                g.fill(hitman.getShadowShapes().get(i));
-            }
-        }
+//        for(Hitman hitman : hitmen){
+//            for(int i=0; i<hitman.getLetters().size(); i++){
+//                // Apply paint
+//                g.setPaint(hitman.getShadowPaints().get(i));
+//                // Set clip
+//                g.setClip(hitman.getClip());
+//                // Fill in visible area
+//                g.fill(hitman.getShadowShapes().get(i));
+//            }
+//        }
 
         // Reset clip to normal
         g.setClip(0, 0, width, height);
@@ -93,31 +93,31 @@ public class Yakuza {
         g.setClip(0, 0, width, height);
 
         // Draw karaoke
-        for(Hitman hitman : hitmen){
-            for(int i=0; i<hitman.getLetters().size(); i++){
-                // Apply paint
-                g.setPaint(hitman.getKaraokePaints().get(i));
-                // Set clip
-                g.setClip(hitman.getClip());
-                // Fill in visible area
-                g.fill(hitman.getKaraokeShapes().get(i));
-            }
-        }
+//        for(Hitman hitman : hitmen){
+//            for(int i=0; i<hitman.getLetters().size(); i++){
+//                // Apply paint
+//                g.setPaint(hitman.getKaraokePaints().get(i));
+//                // Set clip
+//                g.setClip(hitman.getClip());
+//                // Fill in visible area
+//                g.fill(hitman.getKaraokeShapes().get(i));
+//            }
+//        }
 
         // Reset clip to normal
         g.setClip(0, 0, width, height);
 
         // Draw text
-        for(Hitman hitman : hitmen){
-            for(int i=0; i<hitman.getLetters().size(); i++){
-                // Apply paint
-                g.setPaint(hitman.getTextPaints().get(i));
-                // Set clip
-                g.setClip(hitman.getClip());
-                // Fill in visible area
-                g.fill(hitman.getTextShapes().get(i));
-            }
-        }
+//        for(Hitman hitman : hitmen){
+//            for(int i=0; i<hitman.getLetters().size(); i++){
+//                // Apply paint
+//                g.setPaint(hitman.getTextPaints().get(i));
+//                // Set clip
+//                g.setClip(hitman.getClip());
+//                // Fill in visible area
+//                g.fill(hitman.getTextShapes().get(i));
+//            }
+//        }
 
         // Release graphics context
         g.dispose();

@@ -64,13 +64,12 @@ public class AssAssIN {
         AssStyle style = new AssStyle();
         style.setName("AssIN");
         style.setAlignment(new AssAlignment(5));
-        style.setAssFont(new AssFont("Arial Unicode MS", 48));
-        style.setTextColor(new AssColor(Color.yellow));
+        style.setAssFont(new AssFont("Arial Unicode MS", 300));
 
         ass.getStyles().add(style);
 
         AssEvent event = new AssEvent();
-        event.setText("Le cochon et le lapin {\\1a&HAA&}rencontrent{\\r} un chat.");
+        event.setText("{\\xbord20}Oh !");
         event.setStyle(style);
         event.setType(AssEvent.Type.Dialogue);
         event.setStart(new AssTime(0d));
@@ -78,32 +77,41 @@ public class AssAssIN {
 
         ass.getEvents().add(event);
 
-        event = new AssEvent();
-        event.setText("{\\an2\\fscx200\\fscy200}Le cochon et le lapin rencontrent un chat.");
-        event.setStyle(style);
-        event.setType(AssEvent.Type.Dialogue);
-        event.setStart(new AssTime(0d));
-        event.setEnd(new AssTime(1000.523d));
+//        event = new AssEvent();
+//        event.setText("Le cochon et le lapin rencontrent{\\xbord20} un chat.");
+//        event.setStyle(style);
+//        event.setType(AssEvent.Type.Dialogue);
+//        event.setStart(new AssTime(0d));
+//        event.setEnd(new AssTime(1000.523d));
+//
+//        ass.getEvents().add(event);
 
-        ass.getEvents().add(event);
+//        event = new AssEvent();
+//        event.setText("{\\an2\\fscx200\\fscy200}Le cochon et le lapin rencontrent un chat.");
+//        event.setStyle(style);
+//        event.setType(AssEvent.Type.Dialogue);
+//        event.setStart(new AssTime(0d));
+//        event.setEnd(new AssTime(1000.523d));
+//
+//        ass.getEvents().add(event);
 
-        event = new AssEvent();
-        event.setText("{\\an8\\fscx200\\fscy200}Le cochon et le lapin {\\r}rencontrent {\\fscx200\\fscy200\\1c&HFFFF00&}un chat.");
-        event.setStyle(style);
-        event.setType(AssEvent.Type.Dialogue);
-        event.setStart(new AssTime(0d));
-        event.setEnd(new AssTime(1000.523d));
+//        event = new AssEvent();
+//        event.setText("{\\an8\\fscx200\\fscy200}Le cochon et le lapin {\\r}rencontrent {\\fscx200\\fscy200\\1c&HFFFF00&}un chat.");
+//        event.setStyle(style);
+//        event.setType(AssEvent.Type.Dialogue);
+//        event.setStart(new AssTime(0d));
+//        event.setEnd(new AssTime(1000.523d));
+//
+//        ass.getEvents().add(event);
 
-        ass.getEvents().add(event);
-
-        event = new AssEvent();
-        event.setText("{\\a10\\pos(100,100)}Le cochon et le {\\1c&H0000FF&}lapin rencontrent un chat.");
-        event.setStyle(style);
-        event.setType(AssEvent.Type.Dialogue);
-        event.setStart(new AssTime(0d));
-        event.setEnd(new AssTime(1000.523d));
-
-        ass.getEvents().add(event);
+//        event = new AssEvent();
+//        event.setText("{\\a10\\pos(100,100)}Le cochon et le {\\1c&H0000FF&}lapin rencontrent un chat.");
+//        event.setStyle(style);
+//        event.setType(AssEvent.Type.Dialogue);
+//        event.setStart(new AssTime(0d));
+//        event.setEnd(new AssTime(1000.523d));
+//
+//        ass.getEvents().add(event);
 
         return ass;
     }
